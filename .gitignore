@@ -26,6 +26,14 @@ htmlcov/
 # Logs
 *.log
 
+# Environment files (never commit secrets)
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
 # IDE/editor files
 .vscode/
 .idea/
