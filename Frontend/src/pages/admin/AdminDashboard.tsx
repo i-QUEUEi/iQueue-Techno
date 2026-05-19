@@ -25,6 +25,9 @@ export default function AdminDashboard() {
   const analyticsData = allData.analytics as AnalyticsData | undefined;
   const historicalData = allData.historical as HistoricalAnalyticsData | undefined;
   const predictiveData = allData.predictive as PredictiveAnalyticsData | undefined;
+  const predictiveSlots = (predictiveData as PredictiveAnalyticsData & {
+    predictions?: PredictiveAnalyticsData;
+  } | undefined)?.predictions ?? predictiveData;
 
   const handleRefresh = () => {
     refetch();
@@ -153,7 +156,7 @@ export default function AdminDashboard() {
         )}
 
         {/* FORECAST & PATTERNS */}
-        {historicalData && predictiveData && !loading && (
+        {historicalData && predictiveSlots && !loading && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <section>
               <div className="rounded-2xl border border-yellow-200 bg-white shadow-sm p-6">
@@ -175,26 +178,29 @@ export default function AdminDashboard() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">Best Times to Visit</h3>
                 <div className="space-y-3">
                   {[
-                    { label: 'Morning', slot: predictiveData.morning },
-                    { label: 'Afternoon', slot: predictiveData.afternoon },
-                    { label: 'Evening', slot: predictiveData.evening }
+                    { label: 'Morning', slot: predictiveSlots.morning },
+                    { label: 'Afternoon', slot: predictiveSlots.afternoon },
+                    { label: 'Evening', slot: predictiveSlots.evening }
                   ].map((item, idx) => (
-                    <div key={idx} className={`p-4 rounded-lg bg-gradient-to-br ${item.slot.color} text-white`}>
+                    <div
+                      key={idx}
+                      className={`p-4 rounded-lg bg-gradient-to-br ${item.slot?.color ?? 'from-slate-600 to-slate-700'} text-white`}
+                    >
                       <p className="font-semibold text-sm mb-1">{item.label}</p>
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-xs opacity-90">Wait: {item.slot.waitTime} mins</p>
-                          <p className="text-xs opacity-90 mt-1">Confidence: {item.slot.confidence}%</p>
+                          <p className="text-xs opacity-90">Wait: {item.slot?.waitTime ?? 'N/A'} mins</p>
+                          <p className="text-xs opacity-90 mt-1">Confidence: {item.slot?.confidence ?? 0}%</p>
                         </div>
                         <span className={`text-xs font-bold px-2 py-1 rounded ${
-                          item.slot.congestion === 'Low' ? 'bg-green-600' :
-                          item.slot.congestion === 'Medium' ? 'bg-yellow-600' :
+                          item.slot?.congestion === 'Low' ? 'bg-green-600' :
+                          item.slot?.congestion === 'Medium' ? 'bg-yellow-600' :
                           'bg-red-600'
                         }`}>
-                          {item.slot.congestion}
+                          {item.slot?.congestion ?? 'Unknown'}
                         </span>
                       </div>
-                      <p className="text-xs mt-2 opacity-90 italic">{item.slot.recommendation}</p>
+                      <p className="text-xs mt-2 opacity-90 italic">{item.slot?.recommendation ?? 'No recommendation available.'}</p>
                     </div>
                   ))}
                 </div>

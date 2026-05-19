@@ -116,28 +116,28 @@ export const analyticsService = {
    * Fetch model performance metrics and comparison data
    */
   getModelPerformance(): Promise<ApiResponse<AnalyticsData>> {
-    return apiClient.get<AnalyticsData>('/api/model-performance');
+    return apiClient.get<AnalyticsData>('/model-performance');
   },
 
   /**
    * Fetch historical analytics data for charts
    */
   getHistoricalAnalytics(): Promise<ApiResponse<HistoricalAnalyticsData>> {
-    return apiClient.get<HistoricalAnalyticsData>('/api/historical-analytics');
+    return apiClient.get<HistoricalAnalyticsData>('/historical-analytics');
   },
 
   /**
    * Fetch feature importance data
    */
   getFeatureImportance(): Promise<ApiResponse<FeatureImportanceData>> {
-    return apiClient.get<FeatureImportanceData>('/api/feature-importance');
+    return apiClient.get<FeatureImportanceData>('/feature-importance');
   },
 
   /**
    * Fetch predictive analytics data (time slots with forecasts)
    */
   getPredictiveAnalytics(): Promise<ApiResponse<PredictiveAnalyticsData>> {
-    return apiClient.get<PredictiveAnalyticsData>('/api/predictive-analytics');
+    return apiClient.get<PredictiveAnalyticsData>('/predictive-analytics');
   },
 };
 

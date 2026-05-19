@@ -6,6 +6,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { ApiResponse } from './api-client';
 
+interface MultiDataCacheEntry {
+  data: Record<string, any>;
+  timestamp: number;
+}
+
+const multiDataMemoryCache = new Map<string, MultiDataCacheEntry>();
+
 export interface UseDataState<T> {
   data: T | null;
   loading: boolean;
@@ -102,15 +109,42 @@ export function useData<T>(
 export function useMultipleData<T extends Record<string, any>>(
   fetchFns: Record<keyof T, () => Promise<ApiResponse<T[keyof T]>>>,
   dependencies: any[] = [],
-  _fetchOptions?: Parameters<typeof useData>[2]
+  options?: Parameters<typeof useData>[2] & {
+    enableMemoryCache?: boolean;
+    cacheKey?: string;
+    cacheTtlMs?: number;
+  }
 ): Omit<UseDataState<T>, 'data'> & { data: Partial<T>; allLoaded: boolean } {
   const [data, setData] = useState<Partial<T>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refetch = useCallback(async () => {
+  const {
+    enableMemoryCache = true,
+    cacheKey,
+    cacheTtlMs = Infinity,
+  } = options || {};
+
+  const resolvedCacheKey =
+    cacheKey || `useMultipleData:${Object.keys(fetchFns).sort().join('|')}`;
+
+  const isCacheFresh = (entry: MultiDataCacheEntry): boolean => {
+    if (cacheTtlMs === Infinity) return true;
+    return Date.now() - entry.timestamp <= cacheTtlMs;
+  };
+
+  const loadData = useCallback(async (forceRefresh = false) => {
     setLoading(true);
     setError(null);
+
+    if (!forceRefresh && enableMemoryCache) {
+      const cached = multiDataMemoryCache.get(resolvedCacheKey);
+      if (cached && isCacheFresh(cached)) {
+        setData(cached.data as Partial<T>);
+        setLoading(false);
+        return;
+      }
+    }
 
     try {
       const responses = await Promise.all(
@@ -136,6 +170,12 @@ export function useMultipleData<T extends Record<string, any>>(
         setData({});
       } else {
         setData(newData);
+        if (enableMemoryCache) {
+          multiDataMemoryCache.set(resolvedCacheKey, {
+            data: newData,
+            timestamp: Date.now(),
+          });
+        }
         setError(null);
       }
     } catch (err) {
@@ -145,10 +185,17 @@ export function useMultipleData<T extends Record<string, any>>(
     } finally {
       setLoading(false);
     }
-  }, [fetchFns]);
+  }, [enableMemoryCache, fetchFns, resolvedCacheKey, cacheTtlMs]);
+
+  const refetch = useCallback(async () => {
+    if (enableMemoryCache) {
+      multiDataMemoryCache.delete(resolvedCacheKey);
+    }
+    await loadData(true);
+  }, [enableMemoryCache, loadData, resolvedCacheKey]);
 
   useEffect(() => {
-    refetch();
+    loadData(false);
   }, dependencies);
 
   const allLoaded = Object.keys(data).length === Object.keys(fetchFns).length;
