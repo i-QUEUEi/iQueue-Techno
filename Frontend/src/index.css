@@ -5,6 +5,37 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============== GLOBAL SCROLLBAR STYLING ============== */
+/* Hide scrollbars globally while preserving native scrolling behavior */
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: transparent;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: none;
+}
+
+/* IE and Edge */
+html {
+  -ms-overflow-style: none;
+}
+
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: 'Product Sans', 'Google Sans', 'Segoe UI', sans-serif;
